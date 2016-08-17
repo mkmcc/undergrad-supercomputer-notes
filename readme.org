@@ -167,7 +167,7 @@
    =vflow= to keep track of the shock interface and try to follow it
    in your simulations, you need to save these as well.  you just
    simply write them to the end of the file:
-   #+BEGIN_EXAMPLE
+   #+BEGIN_SRC c
    void problem_write_restart(MeshS *pM, FILE *fp)
    {
    #ifdef FOLLOW_SHOCK
@@ -177,10 +177,10 @@
 
      return;
    }
-   #+END_EXAMPLE
+   #+END_SRC
 
    you then read these back in the =read_restart()= function:
-   #+BEGIN_EXAMPLE
+   #+BEGIN_SRC c
    void problem_read_restart(MeshS *pM, FILE *fp)
    {             
      int nl,nd;  
@@ -208,7 +208,7 @@
                  
      return;     
    }             
-   #+END_EXAMPLE
+   #+END_SRC
 
 ** running and restarting your simulations
    once you have this all set-up, you can run athena with a time
@@ -308,3 +308,10 @@
 
   ruby ./join-vtk.rb
   #+END_EXAMPLE
+
+  there's more information you need -- how to log into the computer,
+  how to compile your code, where to run the simulation, and how to
+  copy data back to your laptop.  but you just have to memorize those,
+  and it's easier to go through those in person... they're particular
+  to whatever computer you use, and how it's managed.  this document
+  just goes over the general principles you'd use on any computer.
