@@ -77,3 +77,34 @@
    really talking about cores here.)
 
 ** running your simulation
+   to run your simulation, you need to do it through MPI:
+   #+BEGIN_EXAMPLE
+   $ mpirun -np 4 ./athena -i athinput
+   #+END_EXAMPLE
+
+   again, it's best not to go into the details of what happens
+   here... you shouldn't need it.  this example runs on 4 processors,
+   which needs to be the same as the total number you ask for in the
+   =athinput= file from the last section.
+
+   you'll notice that athena makes four new directories, =id0=, =id1=,
+   =id2=, and =id3=.  each one contains =vtk= files with data from its
+   corresponding processor.  in order to read these files into
+   mathematica, you first need to join these files.
+
+** joining VTK files
+   athena provides a small c program for joining vtk files.  i've
+   copied it in this directory.  to use it, first compile it:
+   #+BEGIN_EXAMPLE
+   $ gcc -o join_vtk.x join_vtk.c -lm
+   #+END_EXAMPLE
+
+   this makes an executable called =join_vtk.x=.  you can run it
+   directly, but i've made a wrapper program called =join-vtk.rb=
+   which should make it easier for you.  in the simulation directory,
+   run
+   #+BEGIN_EXAMPLE
+   $ ruby join-vtk.rb
+   #+END_EXAMPLE
+   and it will make a directory called =merged= with all of the merged
+   vtk files.

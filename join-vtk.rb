@@ -2,7 +2,7 @@
 #
 # This script joins vtk files as a simulation runs.  Assumes the
 # raw vtk files live in directories id*/*.vtk and puts the merged
-# files in merge/*.vtk.
+# files in merged/*.vtk.
 #
 # Only merges files which don't exist or are out of date, so can be
 # run progressively as a simulation runs.
@@ -52,13 +52,13 @@ files.each do |num|
 end
 
 
-seed_id0 = Dir.glob('id0/*.seed.lis').map{|f| f.sub('id0/', '')}
-seed_mer = Dir.glob('merged/*.seed.lis').map{|f| f.sub('merged/', '')}
-seed_copy = seed_id0 - seed_mer
+file1 = "id0/#{base}.hst"
+file2 = "merged/#{base}.hst"
 
-seed_copy.each do |seed|
-  str = "cp id0/#{seed} merged/"
-  issue_cmd str
+unless FileUtils.uptodate?(file1, file2)
+  puts "copying hst file..."
+  cmd = "cp #{file1} #{file2}"
+  issue_cmd cmd
 end
 
 exit 0
