@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH -J join-vtk
+#SBATCH -o join.o%j         # output and error file name (%j expands to jobID)
+#SBATCH -n 1                # total number of mpi tasks requested
+#SBATCH -p development      # queue (partition) -- normal, development, etc.
+#SBATCH -t 01:00:00         # run time (hh:mm:ss) - 1.5 hours
+#SBATCH -A TG-AST140047
+#SBATCH --mail-user=mkmccjr@gmail.com
+#SBATCH --mail-type=begin   # email me when the job starts
+#SBATCH --mail-type=end     # email me when the job finishes
+
+#ibrun ./athena -t 11:55:00
+ruby ./join-vtk.rb
+
+
+
+

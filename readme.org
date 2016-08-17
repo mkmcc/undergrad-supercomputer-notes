@@ -1,0 +1,19 @@
+#+STARTUP:showall
+
+* running athena in parallel
+  
+  you can speed up your simulations by running athena in /parallel/,
+  basically splitting up your simulation domain into N equal-sized
+  chunks and then running each one on a separate processor.  on each
+  of these chunks, the boundary conditions come from the simulation
+  running on the neighboring processor.  athena uses something called
+  MPI (message passing interface) to communicate information among
+  processors.  i would recommend /not/ looking into the details of MPI
+  unless you have to.
+
+  to do this, you first have to re-compile athena with MPI enabled
+
+  #+BEGIN_EXAMPLE
+  $ ./configure --with-gas=hydro --with-problem=... --enable-mpi
+  $ make all
+  #+END_EXAMPLE
