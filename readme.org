@@ -21,7 +21,7 @@
    #+END_EXAMPLE
    
    (you may need to install MPI before doing this... if =which mpirun=
-   doesn't give you anything, try =$brew install open-mpi=)
+   doesn't give you anything, try =$ brew install open-mpi=)
 
 ** setting up the simulation
    next, you need to tell athena how many processors to use.  this
@@ -59,5 +59,21 @@
    used this for some recent simulations on a supercomputer.  you
    won't have 512 processors on your laptops, so maybe try 
    ~NGrid_x1 = NGrid_x2 = 2~ to begin with.
+
+   when you chose your own parameters, remember that the "surface" of
+   cells on your domain need to be communicated as boundary conditions
+   at the interfaces among processors.  communication has to happen at
+   every time-step, and can easily become a bottleneck if you're not
+   careful.  so you don't want to make the sub-domains too small, and
+   you want to make them as "square" as possible to minimize the
+   surface area to volume ratio.
+
+   at the same time, super-computers are organized into hierarchical
+   "nodes," each of which contains some number of processors.  on the
+   =stampede= computer, each node contains 16 processors, so we need
+   the total number we ask for to be an integer multiple of 16.
+
+   (if you know the distinction between /cores/ and /processors/, i'm
+   really talking about cores here.)
 
 ** running your simulation
