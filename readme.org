@@ -113,9 +113,16 @@
 
 
 * restart files
-  supercomputers usually only allow you to run your simulations for
-  some fixed length of time.  after that, it kills your job and you
-  have to resubmit it and return to the back of the line.
+  supercomputers usually use a kind of time-share system... you don't
+  get to run your job directly on the computer.  instead, you submit
+  instructions for running it and request the resources to do so.  it
+  goes into what's called a "queue," and some software schedules all
+  the jobs to run when the resources become available.
+
+  in order to keep you from hogging the machine, supercomputers
+  usually only allow you to run your simulations for some fixed length
+  of time.  after that, it kills your job and you have to resubmit it
+  and return to the back of the line.
 
   so you'll need to be able to use "restart" files, which periodically
   save the simulation grid to the hard drive and enable you to pick up
@@ -148,7 +155,8 @@
 
    everything else needs to be /exactly/ the same in both =problem()=
    and =read_restart()=.  (eg, if you change the order of the history
-   functions, the file will get messed up.)  i will often make a
+   functions, the order of the columns with change halfway through the
+   file and it becomes really hard to read.)  i will often make a
    function =set_vars()= and call it from both functions.
 
    DANGER: one last thing to think about.  if you have some global
@@ -193,7 +201,7 @@
      /* gravity, etc. statements copied from problem() */
                  
      /* DANGER: make sure the order here matches the order in write_restart() */
-   #ifdef FOLLOW_CLOUD
+   #ifdef FOLLOW_SHOCK
      fread(&x_shift, sizeof(Real), 1, fp);
      fread(&vflow,   sizeof(Real), 1, fp);
    #endif        
@@ -203,7 +211,8 @@
    #+END_EXAMPLE
 
 ** running and restarting your simulations
-   next, you can run athena with a time constraint:
+   once you have this all set-up, you can run athena with a time
+   constraint:
    #+BEGIN_EXAMPLE
    $ ./athena -t 00:02:00
    #+END_EXAMPLE
@@ -230,8 +239,8 @@
    test that the restarts work on your laptops.  run one
    low-resolution simulation all the way through, then run another
    restarting it once or twice.  at the end, the outputs should be
-   /identical/ if there's any difference, it indicates some bug in the
-   =read_restart()= function that you need to fix.
+   /identical/ -- if there's any difference, it indicates some bug in
+   the =read_restart()= function that needs to be fixed.
 
    you should also do this for a couple of different processor
    configurations (2x1, 1x2, 2x2, and serial) to make sure nothing
