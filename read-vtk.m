@@ -9,7 +9,7 @@
 
    example usage: 
      ListContourPlot[readVTK["merged/out.0020.vtk", "pressure", "scalar"][[1,All,All]]]
-     ListStreamPlot[readVTK["merged/out.0020.vtk",  "velocity", "vector"][[1,All,All,{1,2}]]] 
+     ListStreamPlot[readVTK["merged/out.0020.vtk",  "velocity", "vector"][[1,All,All,{1,2}]] // Transpose] 
 *)
 readVTK[file_String, label_String, type_String] :=
     Module[{str, n, data, dim,
