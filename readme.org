@@ -112,6 +112,147 @@
    ("serial") simulations.
 
 
-* TODO restart files
+* restart files
+  supercomputers usually only allow you to run your simulations for
+  some fixed length of time.  after that, it kills your job and you
+  have to resubmit it and return to the back of the line.
+
+  so you'll need to be able to use "restart" files, which periodically
+  save the simulation grid to the hard drive and enable you to pick up
+  the simulation where you left off.
+
+** setting up the simulation
+   first, you need to ask athena to give you restart files.  this is
+   very similar to the VTK files you know about:
+
+   #+BEGIN_EXAMPLE
+   <output3>
+   out_fmt  =  rst
+   dt       =  1.0e3
+   #+END_EXAMPLE
+
+** fixing the code
+   remember the =problem()= function that you work on to define your
+   simulation?  that has a couple of jobs:
+   1. read in parameters from the athinput file (eg, =par_get_d()=)
+   2. set up the initial condition by writing values to the grid
+   3. set up special boundary conditions, turn on gravity, history
+      outputs, etc.
+
+   the function =problem()= gets called /before/ the simulation
+   starts.  there's an analogous function =problem_read_restart()=
+   which gets called before a restart simulation begins.  you need to
+   do all of the same things here as in the =problem()= function
+   /except/ #2.  since the simulation is already in progress, you
+   don't want to overwrite the data with your initial condition!
+
+   everything else needs to be /exactly/ the same in both =problem()=
+   and =read_restart()=.  (eg, if you change the order of the history
+   functions, the file will get messed up.)  i will often make a
+   function =set_vars()= and call it from both functions.
+
+   DANGER: one last thing to think about.  if you have some global
+   variable that you use in =userwork_in_loop= or anything else, this
+   also needs to be communicated to the restarted simulation.  to do
+   this, you just stick it to the end of the restart file using
+   =write_restart()=.  for example, if you use variables =x_shift= and
+   =vflow= to keep track of the shock interface and try to follow it
+   in your simulations, you need to save these as well.  you just
+   simply write them to the end of the file:
+   #+BEGIN_EXAMPLE
+   void problem_write_restart(MeshS *pM, FILE *fp)
+   {
+   #ifdef FOLLOW_SHOCK
+     fwrite(&x_shift, sizeof(Real), 1, fp);
+     fwrite(&vflow,   sizeof(Real), 1, fp);
+   #endif
+
+     return;
+   }
+   #+END_EXAMPLE
+
+   you then read these back in the =read_restart()= function:
+   #+BEGIN_EXAMPLE
+   void problem_read_restart(MeshS *pM, FILE *fp)
+   {             
+     int nl,nd;  
+                 
+     /* set boundary conditions.  since this function takes a Mesh, you
+        need to "find" the Domain */
+     for (nl=0; nl<(pM->NLevels); nl++) {
+       for (nd=0; nd<(pM->DomainsPerLevel[nl]); nd++) {
+         if (pM->Domain[nl][nd].Disp[0] == 0)
+           bvals_mhd_fun(&(pM->Domain[nl][nd]), left_x1, bc_ox1);
+       }         
+     }           
+                 
+     /* par_getd statements copied from problem() */
+                 
+     /* dump_history_enroll statements copied from problem() */
+                 
+     /* gravity, etc. statements copied from problem() */
+                 
+     /* DANGER: make sure the order here matches the order in write_restart() */
+   #ifdef FOLLOW_CLOUD
+     fread(&x_shift, sizeof(Real), 1, fp);
+     fread(&vflow,   sizeof(Real), 1, fp);
+   #endif        
+                 
+     return;     
+   }             
+   #+END_EXAMPLE
+
+** running and restarting your simulations
+   next, you can run athena with a time constraint:
+   #+BEGIN_EXAMPLE
+   $ ./athena -t 00:02:00
+   #+END_EXAMPLE
+   the format is =hh:mm:ss=, so the above should quit after two
+   minutes.  in each of the =idn/= directories, you should find a
+   restart file:
+
+   #+BEGIN_EXAMPLE
+   $ ls id0/*.rst
+   id0/sim.0000.rst id0/sim.0001.rst id0/sim.0002.rst
+   #+END_EXAMPLE
+
+   to restart the simulation, you want to take all of the last rst
+   files and move them to the simulation directory:
+   #+BEGIN_EXAMPLE
+   $ find id* -name '*.0002.rst' | xargs -I % mv % ./
+   #+END_EXAMPLE
+   now, you can restart the simulation:
+   #+BEGIN_EXAMPLE
+   $ ./athena -t 00:02:00 -r sim.0002.rst
+   #+END_EXAMPLE
+
+   before running anything on the supercomputer, you should always
+   test that the restarts work on your laptops.  run one
+   low-resolution simulation all the way through, then run another
+   restarting it once or twice.  at the end, the outputs should be
+   /identical/ if there's any difference, it indicates some bug in the
+   =read_restart()= function that you need to fix.
+
+   you should also do this for a couple of different processor
+   configurations (2x1, 1x2, 2x2, and serial) to make sure nothing
+   funny happens at the internal MPI boundaries.  it's much easier to
+   catch these errors running small tests on your laptops than to try
+   and deal with them on the supercomputer.
+
 
 * TODO batch system on supercomputers
+
+  #+BEGIN_EXAMPLE
+  #!/bin/bash
+  #SBATCH -J SOME_NAME_FOR_THE_JOB
+  #SBATCH -o myMPI.o%j
+  #SBATCH -n 512              # total number of mpi tasks requested
+  #SBATCH -p normal           # queue (partition) -- normal, development, etc.
+  #SBATCH -t 12:00:00         # run time (hh:mm:ss)
+  #SBATCH -A OUR_GRANT_NUMBER
+  #SBATCH --mail-user=YOUR_EMAIL_ADDRESS
+  #SBATCH --mail-type=begin   # email me when the job starts
+  #SBATCH --mail-type=end     # email me when the job finishes
+
+  ibrun ./athena -t 11:55:00
+  #+END_EXAMPLE
