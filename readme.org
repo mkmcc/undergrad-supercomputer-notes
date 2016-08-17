@@ -249,19 +249,62 @@
    and deal with them on the supercomputer.
 
 
-* TODO batch system on supercomputers
+* batch system on supercomputers
+  once you know your code works with MPI and with restarts, you're
+  ready to run on the supercomputer!
+
+  as i mentioned earlier, you don't get to use the computer directly.
+  instead, you log into a separate computer called the "login node."
+  on this computer you prepare a little script with instructions for
+  running your simulation and then submit it to the queue.
+  
+  for example, to run a simulation of 512 processors for 12 hours, you
+  might use:
 
   #+BEGIN_EXAMPLE
   #!/bin/bash
   #SBATCH -J SOME_NAME_FOR_THE_JOB
   #SBATCH -o myMPI.o%j
-  #SBATCH -n 512              # total number of mpi tasks requested
-  #SBATCH -p normal           # queue (partition) -- normal, development, etc.
+  #SBATCH -n 512              # total number of processors requested
+  #SBATCH -p normal           # queue -- normal or development
   #SBATCH -t 12:00:00         # run time (hh:mm:ss)
   #SBATCH -A OUR_GRANT_NUMBER
   #SBATCH --mail-user=YOUR_EMAIL_ADDRESS
   #SBATCH --mail-type=begin   # email me when the job starts
   #SBATCH --mail-type=end     # email me when the job finishes
 
+  # run athena here
   ibrun ./athena -t 11:55:00
+  #+END_EXAMPLE
+
+  and save it in a file called =stampede.pbs=
+
+  =ibrun= is stampede's version of =mpirun=, and it automatically
+  keeps track of how many processors to use.
+
+  note that i asked for 12 hours, but told athena to quit after 11:55
+  hours... that gives it 5 minutes to dump its last restart file and
+  exit cleanly before being killed by the supercomputer.  that makes
+  sure we're not left with any half-written files.
+
+  you then submit the job using =sbatch stampede.pbs=.  you'll get an
+  e-mail when it starts, and again when it finishes.
+
+  you really shouldn't run /anything/ on the login node, unless it
+  will only take a minute.  so to join the files, you'll want to again
+  use the queue:
+
+  #+BEGIN_EXAMPLE
+  #!/bin/bash
+  #SBATCH -J join-vtk
+  #SBATCH -o join.o%j
+  #SBATCH -n 1
+  #SBATCH -p development
+  #SBATCH -t 01:00:00
+  #SBATCH -A OUR_GRANT_NUMBER
+  #SBATCH --mail-user=YOUR_EMAIL_ADDRESS
+  #SBATCH --mail-type=begin
+  #SBATCH --mail-type=end
+
+  ruby ./join-vtk.rb
   #+END_EXAMPLE
