@@ -107,4 +107,11 @@
    $ ruby join-vtk.rb
    #+END_EXAMPLE
    and it will make a directory called =merged= with all of the merged
-   vtk files.
+   vtk files.  you can go ahead an analyze these files in the same way
+   you've been working with the files from your single-processor
+   ("serial") simulations.
+
+
+* TODO restart files
+
+* TODO batch system on supercomputers
